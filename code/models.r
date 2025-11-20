@@ -1,24 +1,27 @@
 here::i_am("code/models.R"
-           #! TO DO: add appropriate location
 )
 
-data <- readRDS(
-  file = 
-    here::here("data/sportsref_download.xls"))
-
-library(gtsummary)
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+url <- "https://www.basketball-reference.com/leagues/NBA_2026_per_minute.html"
+page <- read_html(url)
+tables <- page %>% html_nodes("table")
+df <- tables[[1]] %>% html_table(fill = TRUE)
 
 mod <- glm(
-  pts ~ age,
-  data = data
+  PTS ~ Age,
+  data = df
 )
 
 primary_regression_table <- 
   tbl_regression(mod) |>
   add_global_p()
 
-summary(model)
+summary(mod)
+
 saveRDS(
-  regression_tables,
+  primary_regression_table,
   file = 
-    here::here("output/regression_tables.rds"))
+    here::here("output/primary_regression_table.rds"))
