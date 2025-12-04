@@ -8,6 +8,10 @@ here::i_am(
 
 data <- read.csv(here::here("data/NBA_2025_per_minute_clean.csv"), sep = ",")
 
+min_games <- as.numeric(Sys.getenv("MIN_GAMES", 0))
+
+data <- data %>% filter(games_played >= min_games)
+
 # filter out missing or empty positions
 data <- data %>%
   filter(!is.na(position) & position != "")

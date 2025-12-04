@@ -7,13 +7,17 @@ library(tidyr)
 library(ggplot2)
 library(gtsummary)
 
-url <- "https://www.basketball-reference.com/leagues/NBA_2026_per_minute.html"
-page <- read_html(url)
-tables <- page %>% html_nodes("table")
-df <- tables[[1]] %>% html_table(fill = TRUE)
+# Load Data
+
+df <- read.csv(here::here("data/NBA_2025_per_minute_clean.csv"), sep = ",")
+
+# Filter By Minimum Games
+min_games <- as.numeric(Sys.getenv("MIN_GAMES", 0))
+
+df <- df %>% filter(games_played >= min_games)
 
 mod <- glm(
-  PTS ~ Age,
+  points ~ age,
   data = df
 )
 
