@@ -13,40 +13,13 @@ library(ggplot2)
 library(janitor)
 library(rvest)
 
-# --- 1. Create folder if it doesn't exist ---
-if(!dir.exists("code")) dir.create("code")
+# Load Data
 
-# --- 2. Download raw HTML if not already saved ---
-url <- "https://www.basketball-reference.com/leagues/NBA_2025_per_minute.html"
-if (!file.exists("code/NBA_2025_per_minute_raw.html")) {
-  download.file(url, destfile = "code/NBA_2025_per_minute_raw.html", mode = "wb")
-}
+nba_pm_df <- read.csv(here::here("data/NBA_2025_per_minute_clean.csv"), sep = ",")
 
-# --- 3. Read HTML and extract table ---
-html_file <- "code/NBA_2025_per_minute_raw.html"
-page <- read_html(html_file)
-table_node <- html_node(page, "table#per_minute_stats")
-nba_pm_df <- html_table(table_node, fill = TRUE)
+min_games <- as.numeric(Sys.getenv("MIN_GAMES", 0))
 
-# --- 4. Remove repeated header rows ---
-nba_pm_df <- nba_pm_df[trimws(nba_pm_df$Player) != "Player", ]
-
-# --- 5. Clean column names ---
-nba_pm_df <- janitor::clean_names(nba_pm_df)
-
-# --- 6. Rename columns to descriptive names ---
-new_names <- c(
-  "rank", "player", "age", "team", "position",
-  "games_played", "games_started", "minutes_per_game",
-  "field_goals_made", "field_goals_attempted", "field_goal_pct",
-  "three_point_made", "three_point_attempted", "three_point_pct",
-  "two_point_made", "two_point_attempted", "two_point_pct",
-  "effective_fg_pct", "free_throws_made", "free_throws_attempted",
-  "free_throw_pct", "offensive_rebounds", "defensive_rebounds",
-  "total_rebounds", "assists", "steals", "blocks", "turnovers",
-  "personal_fouls", "points", "awards"
-)
-names(nba_pm_df) <- new_names
+nba_pm_df <- nba_pm_df %>% filter(games_played >= min_games)
 
 # --- 7. Convert numeric/stat columns ---
 numeric_cols <- setdiff(names(nba_pm_df), c("player", "team", "position"))
@@ -104,3 +77,6 @@ my_scatterplot <- ggplot(nba_pm_df, aes(x = personal_fouls, y = steal_foul_ratio
 png("output/scatterplot_output.png", width = 800, height = 600)
 print(my_scatterplot)
 dev.off()
+
+# --- 12. Saving scatterplot as RDS
+saveRDS(my_scatterplot, "output/scatterplot.Rds")

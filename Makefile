@@ -1,3 +1,9 @@
+export MIN_GAMES=0
+
+.PHONY: install
+install:
+	Rscript -e "renv::restore(prompt = FALSE)"
+
 report/report.html: report.Rmd \
  data/NBA_2025_per_minute_clean.csv \
  code/clean_data.R \
@@ -35,5 +41,6 @@ clean:
 	      report/report.html\
 	      code/NBA_2025_per_minute_raw.html\
 	      Rplots.pdf\
+	      report.html\
 	      
 .PHONY: all clean

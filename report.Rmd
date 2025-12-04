@@ -4,8 +4,9 @@ author: "Mia Sumera, Monica Rivera, Jacob Shtulman, Averrie Coleman, Cassandra O
 date: "`r Sys.Date()`"
 output: html_document
 params:
-  production: false
----
+  production: True
+  colorblind: False
+--- 
 
 ```{r, package loading, include=!params$production}
 library(here)
@@ -14,6 +15,8 @@ library(dplyr)
 library(haven)
 library(openxlsx)
 library(gtsummary)
+library(ggplot2)
+library(viridis)
 ```
 
 ```{r, setting up global parameters, echo = FALSE, eval = params$production}
@@ -27,10 +30,10 @@ here::i_am("report.Rmd")
 ```
 
 ## Introduction
-Insert text for introduction
+This report analyzes NBA player performance using per-36-minute statistics to compare scoring patterns, positional tendencies, and player efficiency. Using cleaned player data, including points, assists, rebounds, shooting percentages, and games played; we summarized league-level trends and identified top performers across positions. Our visual analyses examined how scoring composition varies by role, how defensive aggressiveness relates to steal-to-foul behavior, and whether age predicts scoring ability. Together, these components provide a multifaceted view of offensive and defensive dynamics in professional basketball.
 
 ## Methods
-Insert text to describe methods
+We imported NBA per-36-minute player statistics from Basketball Reference and cleaned the dataset to standardize variable names, remove invalid entries, and ensure consistent formatting. Each analysis component was generated using customizable modular R scripts that utilize global environmental variables to remain responsive to dynamic user demands such as accessible color schemes, code visibility, and analytic cut offs for minimum games played. All final outputs were saved as RDS and assembled into the report using R Markdown.
 
 ## Analysis
 
@@ -58,9 +61,20 @@ regression_table
 #### Figure 1. Scatterplot of Player Steal-to-Foul Ratios
 ```{r, scatterplot}
 
-knitr::include_graphics(
-  here::here("output", "scatterplot_output.png")
-)
+scatter <- readRDS(here::here("output", "scatterplot.Rds"))
+
+if (inherits(scatter, "ggplot") && isTRUE(params$colorblind)) {
+  
+  scatter$scales$scales <- Filter(
+    function(s) !("colour" %in% s$aesthetics || "color" %in% s$aesthetics),
+    scatter$scales$scales
+  )
+
+  
+  scatter <- scatter + ggplot2::scale_color_viridis_d(option = "D")
+}
+
+scatter
 ```
 
 ### Positional and Shot-Type Differences in Scoring Rates
@@ -68,11 +82,17 @@ knitr::include_graphics(
 ```{r, bargraph}
 
 bargraph <- readRDS(here::here("output", "bargraph.rds"))
-bargraph
 
+if (inherits(bargraph, "ggplot") && isTRUE(params$colorblind)) {
+  bargraph$scales$scales <- Filter(function(s) !("fill" %in% s$aesthetics), bargraph$scales$scales)
+  bargraph <- bargraph + ggplot2::scale_fill_viridis_d(option = "D") +
+                        ggplot2::scale_color_viridis_d(option = "D")
+}
+
+bargraph
 ```
 
 ### Conclusion
-Insert conclusion and discussion
+The descriptive statistics reveal clear positional differences in player performance, with point guards leading in assists and steals, while centers dominate in rebounds, blocks, and two-point scoring. The regression analysis showed no meaningful relationship between age and scoring, suggesting that experience alone does not strongly predict point production per 36 minutes in this dataset. Our scatterplot analysis indicates that players who commit more personal fouls generally produce fewer steals, contradicting the idea that aggressive, high-risk play yields higher defensive rewards. Finally, the shot-type bar graph highlights that all positions rely most heavily on two-point scoring, with centers generating the most interior points and shooting guards contributing the lowest overall scoring output.
 
 
